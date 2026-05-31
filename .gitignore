@@ -11,6 +11,9 @@ data/
 ingest/.cache/
 *.embcache.jsonl
 
+# Transient logs
+*.log
+
 # Python
 __pycache__/
 *.py[cod]
