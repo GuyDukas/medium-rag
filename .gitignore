@@ -1,0 +1,35 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Data (large CSV, gitignored per spec)
+data/
+*.csv
+
+# Embedding / ingestion cache
+ingest/.cache/
+*.embcache.jsonl
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# IDE
+.idea/
+.vscode/
+
+# Course materials (kept local, not published to the public repo)
+.claude/*.pdf
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Vercel
+.vercel
