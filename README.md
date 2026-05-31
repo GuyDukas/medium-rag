@@ -55,13 +55,21 @@ re-embed unchanged chunks. **Validate on a small subset first, then scale.**
 
 ## RAG hyperparameters
 
-Set in `lib/config.py` and reported verbatim by `GET /api/stats`:
+Set in `lib/config.py` and reported verbatim by `GET /api/stats`. Chosen via the
+offline tuning harness — see **[REPORT.md](REPORT.md)** for method and results.
 
 | param          | value | constraint        |
 | -------------- | ----- | ----------------- |
-| `chunk_size`   | 512   | int, max 1024     |
+| `chunk_size`   | 768   | int, max 1024     |
 | `overlap_ratio`| 0.2   | float in [0, 0.3] |
 | `top_k`        | 8     | int in [1, 30]    |
+
+Re-run the comparison (local, cached, ~no cost) with:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install numpy   # dev-only, not a deploy dep
+.\.venv\Scripts\python.exe -m ingest.experiment --subset 200
+```
 
 ## API
 

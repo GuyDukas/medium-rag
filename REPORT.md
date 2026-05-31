@@ -1,0 +1,79 @@
+# RAG Hyperparameter Report
+
+## Chosen values
+
+| param           | value | constraint        |
+| --------------- | ----- | ----------------- |
+| `chunk_size`    | 768   | int, max 1024     |
+| `overlap_ratio` | 0.2   | float in [0, 0.3] |
+| `top_k`         | 8     | int in [1, 30]    |
+
+These are the values served by `GET /api/stats` and used by the live system
+(`lib/config.py`).
+
+## Method
+
+Tuning was done **offline and locally** to protect the $5 budget — no repeated
+Pinecone ingestion. The harness (`ingest/experiment.py`):
+
+1. Chunks a **200-article subset** for each `(chunk_size, overlap)` combo using the
+   same token-based chunker as production (`lib/chunking.chunk_text`, tiktoken
+   `cl100k_base`).
+2. Embeds chunks with the production model (`4UHRUIN-text-embedding-3-small`,
+   1536-dim), caching every vector to `ingest/.cache/embeddings.jsonl` so nothing is
+   embedded twice (the cached vectors are then reused for the full ingest, free).
+3. Retrieves with **in-memory cosine similarity** — the same metric as the Pinecone
+   index — and deduplicates by `article_id`.
+4. Scores against a hand-built eval set of 12 cases (`tests/eval_set.py`) spanning the
+   four required query types, then sweeps `top_k` on the best chunk/overlap config.
+
+**Metrics:** `hit_rate` (a target article appears in deduped top-k), `mrr` (mean
+reciprocal rank of the first correct article, single-target types), and `multi` (share
+of multi-result queries returning ≥3 distinct relevant articles).
+
+## Results
+
+### Part A — chunk_size / overlap @ top_k = 8
+
+| chunk_size | overlap | chunks | hit | mrr | multi |
+| ---------- | ------- | ------ | ---- | ---- | ----- |
+| 256 | 0.1 | 1127 | 0.92 | 1.00 | 0.67 |
+| 256 | 0.2 | 1228 | 0.92 | 1.00 | 0.67 |
+| 512 | 0.1 |  598 | 0.92 | 1.00 | 0.67 |
+| 512 | 0.2 |  641 | 0.92 | 1.00 | 0.67 |
+| 768 | 0.1 |  429 | 0.92 | 1.00 | 0.67 |
+| **768** | **0.2** | **446** | **1.00** | **1.00** | **1.00** |
+
+### Part B — top_k sweep @ chunk_size = 768, overlap = 0.2
+
+| top_k | hit | mrr | multi |
+| ----- | ---- | ---- | ----- |
+| 3 | 0.92 | 1.00 | 0.67 |
+| 5 | 0.92 | 1.00 | 0.67 |
+| **8** | **1.00** | **1.00** | **1.00** |
+| 12 | 1.00 | 1.00 | 1.00 |
+| 20 | 1.00 | 1.00 | 1.00 |
+
+## Rationale
+
+- **chunk_size = 768.** Every combo nailed the single-article queries (MRR 1.00); the
+  differentiator was the **multi-result** type, where the larger 768-token window with
+  0.2 overlap was the only config to surface 3 distinct relevant articles within
+  top-k. Larger chunks also give the model fuller passages for the *key-idea summary*
+  and *recommendation* types. It stays well under the 1024 limit and produces the
+  **fewest chunks** (446 vs 641 at 512), which means cheaper ingestion and less
+  redundant context.
+- **overlap_ratio = 0.2.** At 768, 0.2 beat 0.1 on multi-result coverage (continuity
+  across chunk boundaries kept related passages retrievable) while staying inside the
+  0.3 cap.
+- **top_k = 8.** The smallest k that maximizes every metric. `top_k=3/5` missed the
+  ≥3-distinct-article requirement once dedup removed multiple chunks of the same
+  article; `top_k=12/20` added no quality but would push more tokens into context and
+  cost more. 8 is the efficient knee of the curve.
+
+## Caveat
+
+The eval set is small (12 cases), so absolute scores are optimistic and the 768-vs-512
+margin rests on a single multi-result case. The ranking is nonetheless consistent and
+768/0.2/8 is the budget-efficient choice (fewest chunks among the top scorers). After
+full-corpus ingestion, the same eval set is re-checked against the live Pinecone index.

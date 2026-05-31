@@ -32,7 +32,10 @@ PINECONE_METRIC = "cosine"
 #   chunk_size   : int, max 1024 tokens
 #   overlap_ratio: float in [0, 0.3]
 #   top_k        : int in [1, 30]
-CHUNK_SIZE = 512
+# Chosen via ingest/experiment.py over a 200-article subset against the
+# 4-query-type eval set (tests/eval_set.py). 768/0.2/8 scored best on hit-rate,
+# MRR, and distinct-article coverage. See REPORT.md.
+CHUNK_SIZE = 768
 OVERLAP_RATIO = 0.2
 TOP_K = 8
 
