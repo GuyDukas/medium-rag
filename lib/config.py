@@ -52,6 +52,16 @@ SYSTEM_PROMPT = (
     "when helpful."
 )
 
+# Scoped clarification (permitted by the spec: constraints stay verbatim above,
+# response-style clarifications may be appended). Resolves the conflict between
+# "respond exactly" for the no-answer case and "always explain" for real answers.
+SYSTEM_PROMPT += (
+    " Important: when the answer cannot be determined from the provided context, your "
+    "entire reply must be exactly \"I don't know based on the provided Medium articles "
+    "data.\" with no additional words, explanation, or punctuation. Only add an "
+    "explanation when you are actually answering from the context."
+)
+
 # Exact string to return when the answer is not in context.
 NO_ANSWER = "I don't know based on the provided Medium articles data."
 
