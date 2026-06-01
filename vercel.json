@@ -1,9 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/*.py": {
+    "api/prompt.py": {
       "memory": 1024,
-      "maxDuration": 30
+      "maxDuration": 60
+    },
+    "api/stats.py": {
+      "memory": 1024,
+      "maxDuration": 60
     }
   }
 }
