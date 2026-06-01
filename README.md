@@ -4,6 +4,9 @@ A Retrieval-Augmented Generation system that answers questions **only** from a c
 of ~7,600 English Medium articles. It retrieves relevant passages from Pinecone and
 answers from that context alone — no outside knowledge.
 
+**Live API:** https://medium-rag-pi.vercel.app
+&nbsp;•&nbsp; `GET /api/stats` &nbsp;•&nbsp; `POST /api/prompt` (`{"question": "..."}`)
+
 ## Layout
 
 ```
