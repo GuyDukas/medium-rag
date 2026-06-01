@@ -44,8 +44,8 @@ def check_prompt(question, expect_no_answer=False):
     assert set(body["Augmented_prompt"].keys()) == {"System", "User"}
     if body["context"]:
         assert set(body["context"][0].keys()) == {
-            "article_id", "title", "chunk", "url", "score"
-        }
+            "article_id", "title", "chunk", "score"
+        }, body["context"][0].keys()
     tag = "(expect no-answer)" if expect_no_answer else "(expect grounded)"
     print(f"\nPOST /api/prompt {tag}: {question!r}")
     print("  response:", body["response"][:160])
