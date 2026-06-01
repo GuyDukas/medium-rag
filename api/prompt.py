@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import traceback
 from http.server import BaseHTTPRequestHandler
 
 # Make the repo-root `lib` package importable from the serverless function.
@@ -33,5 +34,8 @@ class handler(BaseHTTPRequestHandler):
 
             result = rag.generate(question)
             self._send(200, result)
-        except Exception as exc:  # surface a clean JSON error
-            self._send(500, {"error": str(exc)})
+        except Exception:
+            # Log the full traceback to the Vercel function logs for debugging,
+            # but return a generic message so internals aren't exposed publicly.
+            traceback.print_exc()
+            self._send(500, {"error": "Internal server error."})
