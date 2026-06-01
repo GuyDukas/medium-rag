@@ -26,7 +26,14 @@ class handler(BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", 0))
             raw = self.rfile.read(length) if length else b"{}"
-            data = json.loads(raw or b"{}")
+            try:
+                data = json.loads(raw or b"{}")
+            except (json.JSONDecodeError, ValueError):
+                self._send(400, {"error": 'Request body must be valid JSON, e.g. {"question": "..."}.'})
+                return
+            if not isinstance(data, dict):
+                self._send(400, {"error": "Request body must be a JSON object."})
+                return
             question = (data.get("question") or "").strip()
             if not question:
                 self._send(400, {"error": "Missing 'question' in request body."})
