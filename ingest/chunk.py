@@ -9,6 +9,7 @@ Run directly to preview chunking on a small subset without embedding:
 from __future__ import annotations
 
 import argparse
+import ast
 import csv
 import os
 import sys
@@ -36,7 +37,25 @@ class Chunk:
     article_id: str
     title: str
     url: str
+    authors: str
     text: str
+
+
+def _parse_authors(raw: str) -> str:
+    """The `authors` column is a stringified list, e.g. "['Ryan Fan']".
+
+    Return a clean, comma-joined name string ("Ryan Fan"), or "" if empty.
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return ""
+    try:
+        names = ast.literal_eval(raw)
+        if isinstance(names, (list, tuple)):
+            return ", ".join(str(n).strip() for n in names if str(n).strip())
+    except (ValueError, SyntaxError):
+        pass
+    return raw  # fall back to the raw string if it isn't a list literal
 
 
 def iter_articles(csv_path: str, limit: int | None = None) -> Iterator[dict]:
@@ -49,6 +68,7 @@ def iter_articles(csv_path: str, limit: int | None = None) -> Iterator[dict]:
                 "article_id": str(i),
                 "title": (row.get("title") or "").strip(),
                 "url": (row.get("url") or "").strip(),
+                "authors": _parse_authors(row.get("authors", "")),
                 "text": row.get("text") or "",
             }
 
@@ -66,6 +86,7 @@ def iter_chunks(
                 article_id=art["article_id"],
                 title=art["title"],
                 url=art["url"],
+                authors=art["authors"],
                 text=piece,
             )
 

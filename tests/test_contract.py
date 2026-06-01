@@ -11,9 +11,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib import config, rag
 
 FAKE_MATCHES = [
-    {"article_id": "12", "title": "A", "url": "http://x/a", "chunk": "alpha text", "score": 0.42},
-    {"article_id": "12", "title": "A", "url": "http://x/a", "chunk": "alpha two", "score": 0.40},
-    {"article_id": "7", "title": "B", "url": "http://x/b", "chunk": "beta text", "score": 0.31},
+    {"article_id": "12", "title": "A", "url": "http://x/a", "authors": "Jane Doe",
+     "chunk": "alpha text", "score": 0.42},
+    {"article_id": "12", "title": "A", "url": "http://x/a", "authors": "Jane Doe",
+     "chunk": "alpha two", "score": 0.40},
+    {"article_id": "7", "title": "B", "url": "http://x/b", "authors": "John Roe",
+     "chunk": "beta text", "score": 0.31},
 ]
 
 
@@ -60,7 +63,8 @@ def test_prompt_payload_shape():
 
     assert isinstance(out["context"], list) and out["context"]
     for c in out["context"]:
-        assert set(c.keys()) == {"article_id", "title", "chunk", "url", "score"}
+        # Exact spec shape — no extra fields (no url/authors leak into context).
+        assert set(c.keys()) == {"article_id", "title", "chunk", "score"}
         assert isinstance(c["article_id"], str)
         assert isinstance(c["score"], float)
 
@@ -75,6 +79,7 @@ def test_user_prompt_includes_context_and_ids():
     assert "article_id=12" in prompt
     assert "alpha text" in prompt
     assert "Q?" in prompt
+    assert "Jane Doe" in prompt          # authors available to the model (Fix 2)
 
 
 def test_dedup_returns_distinct_articles():

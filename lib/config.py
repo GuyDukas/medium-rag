@@ -65,6 +65,15 @@ SYSTEM_PROMPT += (
     "explanation when you are actually answering from the context."
 )
 
+# Scoped clarification for query type 2 (multi-result topic listing): the context
+# may contain several passages from the same article, so the model must collapse
+# them by article and list distinct articles only.
+SYSTEM_PROMPT += (
+    " When the question asks for several articles or a list of articles on a topic, "
+    "return up to 3 distinct articles (each a different article_id); never present "
+    "multiple passages of the same article as if they were separate articles."
+)
+
 # Exact string to return when the answer is not in context.
 NO_ANSWER = "I don't know based on the provided Medium articles data."
 

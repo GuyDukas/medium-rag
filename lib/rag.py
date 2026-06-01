@@ -43,11 +43,14 @@ def retrieve(question: str, top_k: int | None = None) -> list[dict[str, Any]]:
     matches = []
     for m in res.get("matches", []):
         md = m.get("metadata", {}) or {}
+        # url/authors are kept for the model prompt; the API `context` is
+        # trimmed to the exact spec fields in generate().
         matches.append(
             {
                 "article_id": str(md.get("article_id", "")),
                 "title": md.get("title", ""),
                 "url": md.get("url", ""),
+                "authors": md.get("authors", ""),
                 "chunk": md.get("text", ""),
                 "score": round(float(m.get("score", 0.0)), 4),
             }
@@ -79,9 +82,11 @@ def build_user_prompt(question: str, matches: list[dict[str, Any]]) -> str:
     else:
         parts = []
         for i, m in enumerate(matches, 1):
+            author = m.get("authors") or "unknown"
             parts.append(
                 f"[{i}] article_id={m['article_id']} | title: {m['title']}\n"
-                f"url: {m['url']}\n"
+                f"author(s): {author}\n"
+                f"url: {m.get('url', '')}\n"
                 f"passage: {m['chunk']}"
             )
         context_block = "\n\n".join(parts)
@@ -107,9 +112,21 @@ def generate(question: str) -> dict[str, Any]:
     )
     answer = (completion.choices[0].message.content or "").strip()
 
+    # The API `context` must match the spec shape exactly: article_id, title,
+    # chunk, score (no extra fields). url/authors were only for the prompt.
+    context = [
+        {
+            "article_id": m["article_id"],
+            "title": m["title"],
+            "chunk": m["chunk"],
+            "score": m["score"],
+        }
+        for m in matches
+    ]
+
     return {
         "response": answer,
-        "context": matches,
+        "context": context,
         "Augmented_prompt": {
             "System": config.SYSTEM_PROMPT,
             "User": user_prompt,

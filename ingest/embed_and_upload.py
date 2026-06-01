@@ -124,6 +124,7 @@ def run(limit: int | None, batch_size: int, create_index: bool) -> None:
                     "article_id": c.article_id,
                     "title": c.title,
                     "url": c.url,
+                    "authors": c.authors,
                     "text": c.text,
                 },
             }

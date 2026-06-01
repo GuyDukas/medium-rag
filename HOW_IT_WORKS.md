@@ -50,8 +50,8 @@ captures its meaning. Texts about similar topics get similar vectors.
 **Pinecone** is a vector database: a search engine for these meaning-vectors. We upload
 all 18,914 vectors into an index called `medium-rag` (1536 dimensions, **cosine**
 similarity). Alongside each vector we store **metadata** — `article_id`, `title`, `url`,
-and the chunk text — so a search can return the answer *and* its source without a second
-lookup.
+`authors`, and the chunk text — so a search can return the answer *and* its source
+(including who wrote it) without a second lookup.
 
 > After this half, we have a cloud index that, given any question-vector, can instantly
 > return the most semantically similar article passages.
@@ -105,8 +105,11 @@ In: `{ "question": "..." }`. Out, exactly:
   "Augmented_prompt": {"System": "...", "User": "..."}
 }
 ```
-`context` shows the evidence used; `Augmented_prompt` shows the exact prompt sent — full
-transparency into *why* the model answered as it did.
+`context` shows the evidence used (exactly these four fields, per spec); `Augmented_prompt`
+shows the exact prompt sent — full transparency into *why* the model answered as it did.
+The prompt deliberately carries a bit more than `context` (author, url) so the model can
+answer "who wrote it?"-style questions, while the response `context` stays the exact spec
+shape.
 
 ### `GET /api/stats`
 Returns the live hyperparameters: `{ "chunk_size": 768, "overlap_ratio": 0.2, "top_k": 8 }`.
