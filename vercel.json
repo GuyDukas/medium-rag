@@ -1,5 +1,9 @@
 {
   "builds": [
     { "src": "api/*.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/api/prompt", "dest": "/api/prompt.py" },
+    { "src": "/api/stats", "dest": "/api/stats.py" }
   ]
 }
