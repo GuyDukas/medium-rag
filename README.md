@@ -87,6 +87,6 @@ files map automatically to `/api/prompt` and `/api/stats`.
 ## Tests
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/ -q        # if pytest installed
-.\.venv\Scripts\python.exe tests/test_chunking.py     # or run standalone (no deps)
+.\.venv\Scripts\python.exe tests/test_chunking.py     # run standalone (no deps)
+.\.venv\Scripts\python.exe tests/test_contract.py
 ```
