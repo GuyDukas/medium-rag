@@ -27,8 +27,10 @@ venv/
 .idea/
 .vscode/
 
-# Course materials (kept local, not published to the public repo)
+# Course materials and working notes (kept local, not published to the public repo)
 .claude/*.pdf
+.claude/CLAUDE.md
+BUILD_GUIDE.md
 
 # OS
 Thumbs.db
