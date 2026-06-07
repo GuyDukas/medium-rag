@@ -30,7 +30,11 @@ venv/
 # Course materials and working notes (kept local, not published to the public repo)
 .claude/*.pdf
 .claude/CLAUDE.md
+.claude/settings.local.json
 BUILD_GUIDE.md
+
+# Personal submission file (contains student ID; not for the public repo)
+Individual RAG assignment_*.txt
 
 # OS
 Thumbs.db
