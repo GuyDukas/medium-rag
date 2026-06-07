@@ -79,6 +79,62 @@ Re-run the comparison (local, cached, ~no cost) with:
 `POST /api/prompt` — `{ "question": "..." }` → `{ response, context[], Augmented_prompt{System,User} }`
 `GET /api/stats` — `{ chunk_size, overlap_ratio, top_k }`
 
+## Usage examples
+
+Against the live deployment (swap in `http://localhost:3000` if running `vercel dev`).
+
+Current hyperparameters:
+
+```bash
+curl https://medium-rag-pi.vercel.app/api/stats
+# {"chunk_size": 768, "overlap_ratio": 0.2, "top_k": 8}
+```
+
+Ask a question grounded in the corpus:
+
+```bash
+curl -X POST https://medium-rag-pi.vercel.app/api/prompt \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Which article is about becoming a better writer, and who wrote it?"}'
+```
+
+Response (context trimmed for brevity):
+
+```json
+{
+  "response": "The article \"An Easy Way for Writers to Move From Skinny Ideas to Rock Solid First Drafts,\" written by Dawn Bevier, ...",
+  "context": [
+    {
+      "article_id": "1234",
+      "title": "An Easy Way for Writers to Move From Skinny Ideas...",
+      "chunk": "the retrieved passage text...",
+      "score": 0.61
+    }
+  ],
+  "Augmented_prompt": {
+    "System": "You are a Medium-article assistant that answers questions strictly and only based on...",
+    "User": "Use only the following retrieved Medium article context to answer...\n\n=== CONTEXT ===\n..."
+  }
+}
+```
+
+A question the corpus cannot answer returns the fixed refusal string verbatim:
+
+```bash
+curl -X POST https://medium-rag-pi.vercel.app/api/prompt \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is the capital of France?"}'
+# {"response": "I don't know based on the provided Medium articles data.", "context": [...], "Augmented_prompt": {...}}
+```
+
+On Windows PowerShell, `Invoke-RestMethod` is the native equivalent:
+
+```powershell
+Invoke-RestMethod -Uri https://medium-rag-pi.vercel.app/api/prompt -Method Post `
+  -ContentType "application/json" `
+  -Body '{"question": "Which article is about becoming a better writer, and who wrote it?"}'
+```
+
 ## Deploy (Vercel)
 
 Set the same four env vars as Vercel Environment Variables, then deploy. The `api/*.py`
