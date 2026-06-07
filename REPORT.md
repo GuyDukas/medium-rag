@@ -43,6 +43,13 @@ of multi-result queries returning ≥3 distinct relevant articles).
 | 512 | 0.2 |  641 | 0.92 | 1.00 | 0.67 |
 | 768 | 0.1 |  429 | 0.92 | 1.00 | 0.67 |
 | **768** | **0.2** | **446** | **1.00** | **1.00** | **1.00** |
+| 1024 | 0.1 |  341 | 0.92 | 1.00 | 0.67 |
+| 1024 | 0.2 |  352 | 0.92 | 1.00 | 0.67 |
+
+The sweep spans the full legal range up to the **1024-token cap**. 1024 produces the
+fewest chunks (cheapest to ingest) but, like every config other than 768/0.2, misses the
+multi-result case, so 768/0.2 remains the only setting that scores perfectly on all four
+query types.
 
 ### Part B — top_k sweep @ chunk_size = 768, overlap = 0.2
 
@@ -57,12 +64,12 @@ of multi-result queries returning ≥3 distinct relevant articles).
 ## Rationale
 
 - **chunk_size = 768.** Every combo nailed the single-article queries (MRR 1.00); the
-  differentiator was the **multi-result** type, where the larger 768-token window with
-  0.2 overlap was the only config to surface 3 distinct relevant articles within
-  top-k. Larger chunks also give the model fuller passages for the *key-idea summary*
-  and *recommendation* types. It stays well under the 1024 limit and produces the
-  **fewest chunks** (446 vs 641 at 512), which means cheaper ingestion and less
-  redundant context.
+  differentiator was the **multi-result** type, where the 768-token window with 0.2
+  overlap was the only config (across the whole 256 to 1024 sweep) to surface 3 distinct
+  relevant articles within top-k. Larger chunks also give the model fuller passages for
+  the *key-idea summary* and *recommendation* types. Pushing to the 1024 cap is cheaper
+  still (352 chunks on the subset vs 446) but loses that multi-result coverage, so 768 is
+  the knee: best retrieval at near-minimal ingestion cost and little redundant context.
 - **overlap_ratio = 0.2.** At 768, 0.2 beat 0.1 on multi-result coverage (continuity
   across chunk boundaries kept related passages retrievable) while staying inside the
   0.3 cap.
